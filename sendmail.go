@@ -3,8 +3,10 @@ package sendmail
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-mail/mail"
 	"io"
+	"net/mail"
+
+	gomail "github.com/go-mail/mail"
 )
 
 type Config struct {
@@ -43,14 +45,24 @@ func NewConfig(r io.Reader) (*Config, error) {
 	return &c, nil
 }
 
-func NewMail(from *string, to, cc []string, subject, body *string, html bool) *mail.Message {
-	m := mail.NewMessage()
+func NewMail(from *string, to, cc []*mail.Address, subject, body *string, html bool) *gomail.Message {
+	var toAddr, ccAddr []string
+	m := gomail.NewMessage()
 
 	m.SetHeader("From", *from)
-	m.SetHeader("To", to...)
-	if len(cc) != 0 {
-		m.SetHeader("Cc", cc...)
+
+	for _, t := range to {
+		toAddr = append(toAddr, m.FormatAddress(t.Address, t.Name))
 	}
+	m.SetHeader("To", toAddr...)
+
+	if len(cc) != 0 {
+		for _, c := range to {
+			ccAddr = append(toAddr, m.FormatAddress(c.Address, c.Name))
+		}
+		m.SetHeader("Cc", ccAddr...)
+	}
+
 	m.SetHeader("Subject", *subject)
 
 	if html == true {
@@ -58,20 +70,18 @@ func NewMail(from *string, to, cc []string, subject, body *string, html bool) *m
 	} else {
 		m.SetBody("text/plain", *body)
 	}
+
 	return m
 }
 
-func Send(m *mail.Message, c *Config) error {
-	var d *mail.Dialer
+func Send(m *gomail.Message, c *Config) error {
+	var d *gomail.Dialer
 
 	if c.User == "" {
-		d = &mail.Dialer{Host: c.Server, Port: c.Port}
+		d = &gomail.Dialer{Host: c.Server, Port: c.Port}
 	} else {
-		d = mail.NewDialer(c.Server, c.Port, c.User, c.Password)
+		d = gomail.NewDialer(c.Server, c.Port, c.User, c.Password)
 	}
 
-	if err := d.DialAndSend(m); err != nil {
-		return err
-	}
-	return nil
+	return d.DialAndSend(m)
 }

@@ -6,21 +6,20 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/mail"
 	"os"
 	"os/user"
-	"strings"
+	// "strings"
 
 	"github.com/kerma/sendmail"
 )
 
 var (
-	toAddr []string
-	ccAddr []string
-
 	from     = flag.String("from", "", "From address")
 	subject  = flag.String("subject", "", "Email subject")
 	to       = flag.String("to", "", "To address(es)")
 	cc       = flag.String("cc", "", "CC address(es)")
+	dryrun   = flag.Bool("dryrun", false, "Testing mode")
 	confPath = flag.String("conf", "/etc/sendmail/config.json", "Config file path")
 )
 
@@ -45,30 +44,29 @@ func getFrom() *string {
 	return &s
 }
 
-func readStdin() string {
+func readLines(s *bufio.Scanner) string {
 	var b bytes.Buffer
 
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		fmt.Fprintln(&b, scanner.Text())
+	for s.Scan() {
+		fmt.Fprintln(&b, s.Text())
 	}
-	if err := scanner.Err(); err != nil {
+	if err := s.Err(); err != nil {
 		fatal("Failed reading standard input:", err)
 	}
 	return b.String()
 }
 
-func updateConf(c *sendmail.Config, server *string, port *int, username, password *string) {
-	if *server != "" {
-		c.Server = *server
+func readLine(o string, s *bufio.Scanner) string {
+	var b bytes.Buffer
+
+	fmt.Printf(o)
+	s.Scan()
+	fmt.Fprint(&b, s.Text())
+	if err := s.Err(); err != nil {
+		fatal("Failed reading standard input:", err)
 	}
-	if *port != 0 {
-		c.Port = *port
-	}
-	if *username != "" {
-		c.User = *username
-		c.Password = *password
-	}
+	return b.String()
+
 }
 
 func main() {
@@ -87,35 +85,52 @@ func main() {
 	file, _ := os.Open(*confPath)
 	defer file.Close()
 
-	config, err := sendmail.NewConfig(file)
-	if err != nil {
-		fatal(err)
-	}
+	config, _ := sendmail.NewConfig(file)
 	config.Update(&c)
 
 	if config.Server == "" {
 		fatal("Invalid config, missing server value")
 	}
 
+	scanner := bufio.NewScanner(os.Stdin)
+
 	if *from == "" {
 		from = getFrom()
 	}
 
 	if *to == "" {
-		fatal("Missing -to address")
-	} else {
-		toAddr = strings.Split(*to, ",")
+		*to = readLine("To: ", scanner)
+	}
+	toAddr, err := mail.ParseAddressList(*to)
+	if err != nil {
+		log.Println(err)
+		fatal("Invalid email addresses:", *to)
 	}
 
+	var ccAddr []*mail.Address
 	if *cc != "" {
-		ccAddr = strings.Split(*cc, ",")
+		ccAddr, err = mail.ParseAddressList(*cc)
+		if err != nil {
+			fatal("Invalid email addresses:", *cc)
+		}
 	}
 
-	log.Println("Email body (ctrl-d to send):\n")
-	body := readStdin()
+	if *subject == "" {
+		*subject = readLine("Subject: ", scanner)
+	}
+
+	log.Printf("Email body (ctrl-d to send):\n\n")
+	body := readLines(scanner)
 
 	m := sendmail.NewMail(from, toAddr, ccAddr, subject, &body, false)
 	log.Println("Sending...")
-	sendmail.Send(m, config)
+	if *dryrun == false {
+		if err := sendmail.Send(m, config); err != nil {
+			fatal("Failed to send:", err)
+		}
+		// } else {
+		// 	log.Println("DEBUG To: ", m.GetHeader("To"))
+		// 	log.Println("DEBUG Subject: ", m.GetHeader("Subject")[0])
+	}
 	log.Println("Done.")
 }
