@@ -1,0 +1,19 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  PACKAGE: github.com/kerma/sendmail/cmd/sendmail
+
+tasks:
+  test:
+    desc: Run tests
+    cmds:
+      - go test -v {{ .PACKAGE }}
+    silent: true
+
+  install:
+    desc: Install to $GOPATH/bin
+    cmds:
+      - go install {{ .PACKAGE }}
+    silent: true

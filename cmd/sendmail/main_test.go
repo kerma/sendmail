@@ -15,11 +15,11 @@ var (
 	binaryName = "sendmail"
 )
 
-// Test setup: build via makefile and create temp config file
+// Test setup: build binary and create temp config file
 func TestMain(m *testing.M) {
 
 	// build binary
-	make := exec.Command("make", "build")
+	make := exec.Command("go", "build", "github.com/kerma/sendmail/cmd/sendmail")
 	err := make.Run()
 	if err != nil {
 		fmt.Printf("could not make binary for %s: %v\n", binaryName, err)
