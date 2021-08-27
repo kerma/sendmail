@@ -1,0 +1,8 @@
+github.com/go-mail/mail v0.0.0-20180301192024-63235f23494b h1:m35QDmGg5Pnb8U7OP/pETlSu9njctBR/SLucC28Wy6g=
+github.com/go-mail/mail v0.0.0-20180301192024-63235f23494b/go.mod h1:VPWjmmNyRsWXQZHVHT3g0YbIINUkSmuKOiLIDkWbL6M=
+github.com/kerma/sendmail v0.0.0-20181025193012-392d2d9fc009 h1:RB884E7Ny/S6FefnsFJPQl9Jdsq2Tg2OBP7kqwsilDI=
+github.com/kerma/sendmail v0.0.0-20181025193012-392d2d9fc009/go.mod h1:YvvsvKYtV8QudyGs/eZyIPwKRPXtyfM72Fuy4mza/Ok=
+gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc h1:2gGKlE2+asNV9m7xrywl36YYNnBG5ZQ0r/BOOxqPpmk=
+gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc/go.mod h1:m7x9LTH6d71AHyAX77c9yqWCCa3UKHcVEj9y7hAtKDk=
+gopkg.in/mail.v2 v2.3.1 h1:WYFn/oANrAGP2C0dcV6/pbkPzv8yGzqTjPmTeO7qoXk=
+gopkg.in/mail.v2 v2.3.1/go.mod h1:htwXN1Qh09vZJ1NVKxQqHPBaCBbzKhp5GzuJEA4VJWw=
