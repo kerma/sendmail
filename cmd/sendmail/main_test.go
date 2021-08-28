@@ -115,6 +115,28 @@ func TestRunner(t *testing.T) {
 				"-conf", tmpfile.Name()},
 			"",
 		},
+		{
+			"Attachment",
+			"email body",
+			[]string{
+				"-dryrun",
+				"-conf", tmpfile.Name(),
+				"-to", "hello@test.com",
+				"-subject", "test",
+				"-attach", "filepath.txt"},
+			"",
+		},
+		{
+			"HTML body",
+			"<h1>Hello</h1><p>world</p>",
+			[]string{
+				"-dryrun",
+				"-conf", tmpfile.Name(),
+				"-to", "hello@test.com",
+				"-subject", "test",
+				"-html"},
+			"",
+		},
 	}
 
 	d, _ := os.Getwd()

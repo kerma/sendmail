@@ -10,6 +10,9 @@ tasks:
     desc: Run tests
     cmds:
       - go test -v {{ .PACKAGE }}
+    sources:
+      - "*.go"
+      - cmd/sendmail/*.go
     silent: true
 
   install:

@@ -9,9 +9,13 @@ import (
 	"net/mail"
 	"os"
 	"os/user"
-	// "strings"
+	"path"
 
 	"github.com/kerma/sendmail"
+)
+
+const (
+	defaultConfig string = "sendmail/config.json"
 )
 
 var (
@@ -20,7 +24,9 @@ var (
 	to       = flag.String("to", "", "To address(es)")
 	cc       = flag.String("cc", "", "CC address(es)")
 	dryrun   = flag.Bool("dryrun", false, "Testing mode")
-	confPath = flag.String("conf", "/etc/sendmail/config.json", "Config file path")
+	confPath = flag.String("conf", "", "Config file path")
+	attach   = flag.String("attach", "", "Attachment path")
+	html     = flag.Bool("html", false, "Send as html")
 )
 
 func fatal(s ...interface{}) {
@@ -74,7 +80,6 @@ func main() {
 	log.SetFlags(0)
 	log.SetPrefix("=> ")
 
-	// Add config override flags
 	var c sendmail.Config
 	flag.StringVar(&c.Server, "server", "", "SMTP server host")
 	flag.IntVar(&c.Port, "port", 0, "SMTP server port")
@@ -82,7 +87,7 @@ func main() {
 	flag.StringVar(&c.Password, "password", "", "SMTP server password")
 	flag.Parse()
 
-	file, _ := os.Open(*confPath)
+	file, _ := os.Open(getConfPath(confPath))
 	defer file.Close()
 
 	config, _ := sendmail.NewConfig(file)
@@ -122,15 +127,26 @@ func main() {
 	log.Printf("Email body (ctrl-d to send):\n\n")
 	body := readLines(scanner)
 
-	m := sendmail.NewMail(from, toAddr, ccAddr, subject, &body, false)
+	m := sendmail.NewMail(from, toAddr, ccAddr, *subject, body, *attach, *html)
 	log.Println("Sending...")
 	if *dryrun == false {
 		if err := sendmail.Send(m, config); err != nil {
 			fatal("Failed to send:", err)
 		}
-		// } else {
-		// 	log.Println("DEBUG To: ", m.GetHeader("To"))
-		// 	log.Println("DEBUG Subject: ", m.GetHeader("Subject")[0])
 	}
 	log.Println("Done.")
+}
+
+func getConfPath(p *string) string {
+	if *p != "" {
+		return *p
+	}
+
+	config := os.Getenv("XDG_CONFIG_HOME")
+	if config != "" {
+		return path.Join(config, defaultConfig)
+	}
+
+	home := os.Getenv("HOME")
+	return path.Join(home, ".config", defaultConfig)
 }

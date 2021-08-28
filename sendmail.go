@@ -45,7 +45,7 @@ func NewConfig(r io.Reader) (*Config, error) {
 	return &c, nil
 }
 
-func NewMail(from *string, to, cc []*mail.Address, subject, body *string, html bool) *gomail.Message {
+func NewMail(from *string, to, cc []*mail.Address, subject, body, attachment string, html bool) *gomail.Message {
 	var toAddr, ccAddr []string
 	m := gomail.NewMessage()
 
@@ -63,12 +63,16 @@ func NewMail(from *string, to, cc []*mail.Address, subject, body *string, html b
 		m.SetHeader("Cc", ccAddr...)
 	}
 
-	m.SetHeader("Subject", *subject)
+	m.SetHeader("Subject", subject)
 
 	if html == true {
-		m.SetBody("text/html", *body)
+		m.SetBody("text/html", body)
 	} else {
-		m.SetBody("text/plain", *body)
+		m.SetBody("text/plain", body)
+	}
+
+	if attachment != "" {
+		m.Attach(attachment)
 	}
 
 	return m
